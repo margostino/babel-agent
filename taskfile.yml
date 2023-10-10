@@ -1,5 +1,7 @@
 version: '3'
 
+# https://taskfile.dev/usage/
+
 tasks:
   build:
     cmds:
@@ -8,7 +10,7 @@ tasks:
 
   load:
     cmds:
-      - launchctl bootstrap /Library/LaunchAgents/org.babel.agent.plist
+      - launchctl bootstrap system /Library/LaunchAgents/org.babel.agent.plist
 
   list:
     cmds:
@@ -16,4 +18,10 @@ tasks:
 
   unload:
     cmds:
-      - launchctl bootout /Library/LaunchAgents/org.babel.agent.plist
+      - launchctl bootout system /Library/LaunchAgents/org.babel.agent.plist
+
+  restart:
+    cmds:
+      - task: unload
+      - task: load
+      - task: list
