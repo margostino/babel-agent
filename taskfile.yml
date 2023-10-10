@@ -5,3 +5,15 @@ tasks:
     cmds:
       - go build -v -o babel-agent
       - cp babel-agent $GOBIN
+
+  load:
+    cmds:
+      - launchctl load /Library/LaunchAgents/org.babel.agent.plist
+
+  list:
+    cmds:
+      - launchctl list | grep org.babel.agent
+
+  unload:
+    cmds:
+      - launchctl unload /Library/LaunchAgents/org.babel.agent.plist

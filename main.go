@@ -157,7 +157,26 @@ func run(ctx context.Context, c *Config, stdout io.Writer) error {
 				_, err = workTree.Add(".")
 				common.Check(err, "Failed to add file to git")
 				common.Check(err, "Failed to get status")
-				log.Printf("Status: %s\n", status)
+				//log.Printf("Status: %s\n", status)
+
+				trackedFilesCount := len(status)
+				modifiedCount := 0
+				deletedCount := 0
+				addedCount := 0
+
+				for _, s := range status {
+					if s.Staging == git.Added {
+						addedCount++
+					}
+					if s.Staging == git.Deleted {
+						deletedCount++
+					}
+					if s.Staging == git.Modified {
+						modifiedCount++
+					}
+				}
+
+				log.Printf("Tracked files: %d (modified: %d added: %d deleted: %d)", trackedFilesCount, modifiedCount, addedCount, deletedCount)
 
 				commit, err := workTree.Commit(c.Repository.Message, &git.CommitOptions{
 					Author: &object.Signature{
@@ -169,7 +188,6 @@ func run(ctx context.Context, c *Config, stdout io.Writer) error {
 				common.Check(err, "Failed to commit")
 				obj, err := repo.CommitObject(commit)
 				common.Check(err, "Failed to get commit object")
-				log.Printf("Commit: %s\n", obj)
 				err = repo.Push(&git.PushOptions{})
 				common.Check(err, "Failed to push")
 				log.Printf(fmt.Sprintf("Commit [%s] pushed successfully", obj.Hash.String()))

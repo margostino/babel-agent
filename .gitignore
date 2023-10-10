@@ -27,3 +27,4 @@ go.work
 .env
 babel
 babel.conf
+babel-agent
