@@ -141,6 +141,9 @@ func run(ctx context.Context, c *Config, stdout io.Writer) error {
 	c.init(os.Args)
 	log.SetOutput(os.Stdout)
 
+	log.Printf("Babel agent started with configuration: Repo [%s] Tick [%s] User [%s] Email [%s] Message [%s]",
+		c.Repository.Path, c.Agent.Tick, c.User.Username, c.User.Email, c.Repository.Message)
+
 	for {
 		select {
 		case <-ctx.Done():
