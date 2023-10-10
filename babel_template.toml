@@ -1,0 +1,10 @@
+[repository]
+path = "$LOCAL_REPO_PATH_TO_BABEL_DATA"
+message = "$DEFAULT_COMMIT_MESSAGE"
+
+[user]
+username = "$GIT_USERNAME"
+email = "$GIT_EMAIL"
+
+[agent]
+tick = "$TICK (e.g. 10s)"

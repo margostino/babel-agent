@@ -26,3 +26,4 @@ go.work
 *.db
 .env
 babel
+babel.conf
