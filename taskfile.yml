@@ -10,7 +10,7 @@ tasks:
 
   load:
     cmds:
-      - launchctl bootstrap system /Library/LaunchAgents/org.babel.agent.plist
+      - launchctl bootstrap system /Library/LaunchDaemons/org.babel.agent.plist
 
   list:
     cmds:
@@ -18,7 +18,7 @@ tasks:
 
   unload:
     cmds:
-      - launchctl bootout system /Library/LaunchAgents/org.babel.agent.plist
+      - launchctl bootout system /Library/LaunchDaemons/org.babel.agent.plist
 
   restart:
     cmds:

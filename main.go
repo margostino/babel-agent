@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"os/user"
 	"syscall"
 	"time"
 )
@@ -141,8 +142,13 @@ func run(ctx context.Context, c *Config, stdout io.Writer) error {
 	c.init(os.Args)
 	log.SetOutput(os.Stdout)
 
-	log.Printf("Babel agent started with configuration: Repo [%s] Tick [%s] User [%s] Email [%s] Message [%s]",
-		c.Repository.Path, c.Agent.Tick, c.User.Username, c.User.Email, c.Repository.Message)
+	u, err := user.Current()
+	common.Check(err, "Failed to get current user")
+
+	username := u.Username
+
+	log.Printf("Babel agent started (by %s) with configuration: Repo [%s] Tick [%s] User [%s] Email [%s] Message [%s]",
+		username, c.Repository.Path, c.Agent.Tick, c.User.Username, c.User.Email, c.Repository.Message)
 
 	for {
 		select {
