@@ -5,8 +5,7 @@ version: '3'
 tasks:
   build:
     cmds:
-      - go build -v -o babel-agent
-      - cp babel-agent $GOBIN
+      - go build -v -o babel-agent #- cp babel-agent $GOBIN
 
   load:
     cmds:
@@ -18,7 +17,7 @@ tasks:
 
   unload:
     cmds:
-      - launchctl bootout gui/501 /Library/LaunchDaemons/org.babel.agent.plist
+      - launchctl bootout system /Library/LaunchDaemons/org.babel.agent.plist
 
   restart:
     cmds:

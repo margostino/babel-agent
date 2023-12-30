@@ -4,10 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/BurntSushi/toml"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/margostino/babel-agent/pkg/common"
 	"io"
 	"log"
 	"os"
@@ -15,6 +11,11 @@ import (
 	"os/user"
 	"syscall"
 	"time"
+
+	"github.com/BurntSushi/toml"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/margostino/babel-agent/pkg/common"
 )
 
 const defaultTick = 10 * time.Second
@@ -42,6 +43,8 @@ type Config struct {
 }
 
 func (c *Config) init(args []string) error {
+
+	// log.Printf(fmt.Sprintf("SSH_AUTH_SOCK: %s\n", os.Getenv("SSH_AUTH_SOCK")))
 
 	if len(args[1:]) == 0 {
 		common.Fail("tick, repo, user and email are required")
