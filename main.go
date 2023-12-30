@@ -151,7 +151,12 @@ func run(ctx context.Context, c *Config, stdout io.Writer) error {
 	log.Printf("Babel agent started (by %s) with configuration: Repo [%s] Tick [%s] User [%s] Email [%s] Message [%s]",
 		username, c.Repository.Path, c.Agent.Tick, c.User.Username, c.User.Email, c.Repository.Message)
 
-	log.Printf("SSH_AUTH_SOCK is set: %s\n", os.Getenv("SSH_AUTH_SOCK"))
+	sshAuthSock := os.Getenv("SSH_AUTH_SOCK")
+	if sshAuthSock != "" {
+		log.Printf("SSH_AUTH_SOCK is set: %s", sshAuthSock)
+	} else {
+		log.Printf("SSH_AUTH_SOCK not set")
+	}
 
 	for {
 		select {
