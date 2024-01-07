@@ -168,6 +168,10 @@ func run(ctx context.Context, c *Config, stdout io.Writer) error {
 			common.Check(err, "Failed to open git repo")
 			workTree, err := repo.Worktree()
 			common.Check(err, "Failed to get work tree from repo")
+			err = workTree.Pull(&git.PullOptions{RemoteName: "origin"})
+			if err != nil && err.Error() != "already up-to-date" {
+				common.Check(err, "Failed to pull")
+			}
 			status, err := workTree.Status()
 
 			if !status.IsClean() {
