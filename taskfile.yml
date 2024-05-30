@@ -9,7 +9,10 @@ tasks:
 
   load:
     cmds:
-      - launchctl bootstrap gui/501 /Library/LaunchDaemons/org.babel.agent.plist
+      - |
+        USER_ID=$(id -u)
+        echo "Using user ID: $USER_ID for launchctl bootstrap"
+        launchctl bootstrap gui/$USER_ID /Library/LaunchDaemons/org.babel.agent.plist      
 
   list:
     cmds:
