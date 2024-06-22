@@ -6,5 +6,10 @@ message = "$DEFAULT_COMMIT_MESSAGE"
 username = "$GIT_USERNAME"
 email = "$GIT_EMAIL"
 
+[ssh]
+passphrase = "$SSH_PASSPHRASE"
+filePath = "$SSH_PRIVATE_KEY_PATH"
+
+
 [agent]
 tick = "$TICK (e.g. 10s)"
