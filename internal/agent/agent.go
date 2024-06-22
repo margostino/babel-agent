@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -21,44 +20,25 @@ func NewAgent(config *config.Config) *Agent {
 }
 
 func (a *Agent) Run(ctx context.Context) error {
-	a.config.Init(os.Args)
-	log.SetOutput(os.Stdout)
-
-	// u, err := user.Current()
-	// common.Check(err, "Failed to get current user")
-
-	// username := u.Username
-
-	// log.Printf(`Babel agent started (by %s) with configuration:
-	// Repo [%s]
-	// Tick [%s]
-	// User [%s]
-	// Email [%s]
-	// Message [%s]`,
-	// 	username, a.config.Repository.Path, a.config.Agent.Tick, a.config.User.Username, a.config.User.Email, a.config.Repository.Message)
-
-	// sshAuthSock := os.Getenv("SSH_AUTH_SOCK")
-	// if sshAuthSock != "" {
-	// 	log.Printf("SSH_AUTH_SOCK is set: %s", sshAuthSock)
-	// } else {
-	// 	log.Printf("SSH_AUTH_SOCK not set")
-	// }
+	// a.config.Init(os.Args)
+	// log.SetOutput(os.Stdout)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-time.Tick(a.config.Agent.Tick):
+		case <-time.NewTicker(a.config.Agent.Tick).C:
 			path := a.config.Repository.Path
 			repo, err := git.PlainOpen(path)
 			common.Check(err, "Failed to open git repo")
 			workTree, err := repo.Worktree()
 			common.Check(err, "Failed to get work tree from repo")
-			err = workTree.Pull(&git.PullOptions{RemoteName: "origin"})
+			err = workTree.Pull(&git.PullOptions{RemoteName: "origin", Auth: a.config.Ssh.PublicKey})
 			if err != nil && err.Error() != "already up-to-date" {
 				common.Check(err, "Failed to pull")
 			}
 			status, err := workTree.Status()
+			common.Check(err, "Failed to get status")
 
 			if !status.IsClean() {
 				_, err = workTree.Add(".")
@@ -94,7 +74,7 @@ func (a *Agent) Run(ctx context.Context) error {
 				common.Check(err, "Failed to commit")
 				obj, err := repo.CommitObject(commit)
 				common.Check(err, "Failed to get commit object")
-				err = repo.Push(&git.PushOptions{})
+				err = repo.Push(&git.PushOptions{Auth: a.config.Ssh.PublicKey})
 				common.Check(err, "Failed to push")
 				log.Printf("Commit [%s] pushed successfully", obj.Hash.String())
 			}

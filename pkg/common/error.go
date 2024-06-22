@@ -14,7 +14,7 @@ func Check(err error, message string) {
 }
 
 func Fail(message string) {
-	log.Printf("Error: %s\n", message)
+	log.Fatalf("Error: %s\n", message)
 	os.Exit(1)
 }
 
@@ -26,13 +26,13 @@ func Fail(message string) {
 
 func SilentCheck(err error, message string) {
 	if err != nil {
-		log.Printf("Error: %s - %s\n", err.Error(), message)
+		log.Fatalf("Error: %s - %s\n", err.Error(), message)
 	}
 }
 
 func IsError(err error, message string) bool {
 	if err != nil {
-		log.Printf("Error: %s - %s\n", err.Error(), message)
+		log.Fatalf("Error: %s - %s\n", err.Error(), message)
 		return true
 	}
 	return false
