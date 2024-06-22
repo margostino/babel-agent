@@ -2,11 +2,13 @@ module github.com/margostino/babel-agent
 
 go 1.18
 
-require github.com/go-git/go-git/v5 v5.9.0
+require (
+	github.com/BurntSushi/toml v1.3.2
+	github.com/go-git/go-git/v5 v5.9.0
+)
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
 	github.com/acomagu/bufpipe v1.0.4 // indirect

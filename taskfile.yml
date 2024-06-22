@@ -1,18 +1,24 @@
 version: '3'
 
 # https://taskfile.dev/usage/
+# REQUIRES:
+# sudo chown root:wheel /Library/LaunchDaemons/org.babel.agent.plist
+# sudo chmod 644 /Library/LaunchDaemons/org.babel.agent.plist
+# sudo chmod +x /Users/$USER/go/bin/babel-agent
 
 tasks:
   build:
     cmds:
-      - go build -v -o babel-agent #- cp babel-agent $GOBIN
+      #- go build -v -o babel-agent #- cp babel-agent $GOBIN
+      - bash ./scripts/build.sh
+      - cp ./bin/babel-agent $GOBIN
 
   load:
     cmds:
       - |
         USER_ID=$(id -u)
         echo "Using user ID: $USER_ID for launchctl bootstrap"
-        launchctl bootstrap gui/$USER_ID /Library/LaunchDaemons/org.babel.agent.plist      
+        launchctl bootstrap gui/$USER_ID /Library/LaunchDaemons/org.babel.agent.plist
 
   list:
     cmds:
