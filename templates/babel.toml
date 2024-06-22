@@ -10,6 +10,5 @@ email = "$GIT_EMAIL"
 passphrase = "$SSH_PASSPHRASE"
 filePath = "$SSH_PRIVATE_KEY_PATH"
 
-
 [agent]
 tick = "$TICK (e.g. 10s)"
