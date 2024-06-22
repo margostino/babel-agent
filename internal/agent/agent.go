@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"os/user"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -25,25 +24,25 @@ func (a *Agent) Run(ctx context.Context) error {
 	a.config.Init(os.Args)
 	log.SetOutput(os.Stdout)
 
-	u, err := user.Current()
-	common.Check(err, "Failed to get current user")
+	// u, err := user.Current()
+	// common.Check(err, "Failed to get current user")
 
-	username := u.Username
+	// username := u.Username
 
-	log.Printf(`Babel agent started (by %s) with configuration: 
-	Repo [%s] 
-	Tick [%s] 
-	User [%s] 
-	Email [%s] 
-	Message [%s]`,
-		username, a.config.Repository.Path, a.config.Agent.Tick, a.config.User.Username, a.config.User.Email, a.config.Repository.Message)
+	// log.Printf(`Babel agent started (by %s) with configuration:
+	// Repo [%s]
+	// Tick [%s]
+	// User [%s]
+	// Email [%s]
+	// Message [%s]`,
+	// 	username, a.config.Repository.Path, a.config.Agent.Tick, a.config.User.Username, a.config.User.Email, a.config.Repository.Message)
 
-	sshAuthSock := os.Getenv("SSH_AUTH_SOCK")
-	if sshAuthSock != "" {
-		log.Printf("SSH_AUTH_SOCK is set: %s", sshAuthSock)
-	} else {
-		log.Printf("SSH_AUTH_SOCK not set")
-	}
+	// sshAuthSock := os.Getenv("SSH_AUTH_SOCK")
+	// if sshAuthSock != "" {
+	// 	log.Printf("SSH_AUTH_SOCK is set: %s", sshAuthSock)
+	// } else {
+	// 	log.Printf("SSH_AUTH_SOCK not set")
+	// }
 
 	for {
 		select {

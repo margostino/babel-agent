@@ -18,7 +18,7 @@ tasks:
       - |
         USER_ID=$(id -u)
         echo "Using user ID: $USER_ID for launchctl bootstrap"
-        launchctl bootstrap gui/$USER_ID /Library/LaunchDaemons/org.babel.agent.plist
+        launchctl bootstrap gui/$USER_ID /Library/LaunchAgents/org.babel.agent.plist
 
   list:
     cmds:
@@ -26,8 +26,12 @@ tasks:
 
   unload:
     cmds:
-      - launchctl bootout system /Library/LaunchDaemons/org.babel.agent.plist
+      - launchctl bootout gui/$(id -u) /Library/LaunchAgents/org.babel.agent.plist
 
+  check:
+    cmds:
+      - plutil /Library/LaunchDaemons/org.babel.agent.plist
+      
   restart:
     cmds:
       - task: unload
