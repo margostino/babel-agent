@@ -1,16 +1,20 @@
 package tools
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/margostino/babel-agent/internal/config"
-	"github.com/margostino/babel-agent/pkg/common"
+	"github.com/margostino/babel-agent/internal/utils"
+
+	"github.com/margostino/babel-agent/internal/common"
 )
 
-func walkFiles(root string, skipNamesMap map[string]struct{}) error {
+func walkAndNormalizeFiles(root string, skipNamesMap map[string]struct{}) error {
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -46,22 +50,31 @@ func normalizeFileName(name string) string {
 	return normalized
 }
 
-func listToMap(list []string) map[string]struct{} {
-	m := make(map[string]struct{}, len(list))
-	for _, v := range list {
-		m[v] = struct{}{}
-	}
-	return m
-}
-func AssetsCleaner(config *config.Config) (bool, error) {
-	log.Println("Running AssetsCleaner tool...")
-	skipNames := []string{".git", "0-description"}
-	skipNamesMap := listToMap(skipNames)
+func CleanAssets(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Println(fmt.Sprintf("Running AssetsCleaner tool for file: %s", relativeFilePath))
 
-	if err := walkFiles(config.Repository.Path, skipNamesMap); err != nil {
+	root := config.Repository.Path
+	oldPath := filepath.Join(root, relativeFilePath)
+	pathParts := common.NewString(relativeFilePath).Split("/").Values()
+	filename := pathParts[len(pathParts)-1]
+	normalizedFileName := normalizeFileName(filename)
+	if normalizedFileName != filename {
+		newPath := filepath.Join(root, relativeFilePath, normalizedFileName)
+		if err := os.Rename(oldPath, newPath); err != nil {
+			log.Fatalf("Error renaming file: %v\n", err)
+		} else {
+			log.Printf("Renamed file: %s to %s\n", oldPath, newPath)
+		}
+	}
+}
+
+func CleanAssetsInBulk(config *config.Config) {
+	log.Println("Running AssetsCleaner tool...")
+	skipNames := []string{".git", "0-description", "0-babel", "metadata_index"}
+	skipNamesMap := utils.ListToMap(skipNames)
+
+	if err := walkAndNormalizeFiles(config.Repository.Path, skipNamesMap); err != nil {
 		log.Printf("Error walking through the path: %v\n", err)
 	}
-
-	return true, nil
-
 }

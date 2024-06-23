@@ -2,15 +2,16 @@ package tools
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/margostino/babel-agent/internal/common"
 	"github.com/margostino/babel-agent/internal/config"
-	"github.com/margostino/babel-agent/pkg/common"
 )
 
-func GitUpdater(config *config.Config) (bool, error) {
+func UpdateGit(config *config.Config) (bool, error) {
 	log.Println("Running GitUpdater tool...")
 	path := config.Repository.Path
 	repo, err := git.PlainOpen(path)
@@ -25,9 +26,22 @@ func GitUpdater(config *config.Config) (bool, error) {
 	common.Check(err, "Failed to get status")
 
 	if !status.IsClean() {
+
+		var wg sync.WaitGroup
+		for key := range status {
+			if config.Tools.MetadataEnricherEnabled {
+				wg.Add(1)
+				go EnrichMetadata(config, key, &wg)
+			}
+			if config.Tools.AssetsCleanerEnabled {
+				wg.Add(1)
+				go CleanAssets(config, key, &wg)
+			}
+		}
+		wg.Wait()
+
 		_, err = workTree.Add(".")
 		common.Check(err, "Failed to add file to git")
-		common.Check(err, "Failed to get status")
 
 		trackedFilesCount := len(status)
 		modifiedCount := 0

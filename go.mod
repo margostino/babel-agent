@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/go-git/go-git/v5 v5.9.0
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (

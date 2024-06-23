@@ -10,5 +10,13 @@ email = "$GIT_EMAIL"
 passphrase = "$SSH_PASSPHRASE"
 filePath = "$SSH_PRIVATE_KEY_PATH"
 
+[openai]
+apiKey = "$OPENAI_API_KEY"
+
 [agent]
 tick = "$TICK (e.g. 10s)"
+
+[tools]
+gitUpdaterEnabled = false
+assetsCleanerEnabled = false
+metadataEnricherEnabled = true

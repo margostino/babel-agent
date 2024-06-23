@@ -10,8 +10,9 @@ import (
 )
 
 type Tools struct {
-	GitUpdater    func(config *config.Config) (bool, error)
-	AssetsCleaner func(config *config.Config) (bool, error)
+	UpdateGit      func(config *config.Config) (bool, error)
+	CleanAssets    func(config *config.Config)
+	EnrichMetadata func(config *config.Config)
 }
 
 type Agent struct {
@@ -23,8 +24,9 @@ func NewAgent(config *config.Config) *Agent {
 	return &Agent{
 		config: config,
 		tools: Tools{
-			GitUpdater:    tools.GitUpdater,
-			AssetsCleaner: tools.AssetsCleaner,
+			UpdateGit:      tools.UpdateGit,
+			CleanAssets:    tools.CleanAssetsInBulk,
+			EnrichMetadata: tools.EnrichMetadataInBulk,
 		},
 	}
 }
@@ -36,17 +38,34 @@ func (a *Agent) Run(ctx context.Context) error {
 			return nil
 		case <-time.NewTicker(a.config.Agent.Tick).C:
 			var wg sync.WaitGroup
-			wg.Add(2)
+			wg.Add(3)
 
-			go func() {
-				defer wg.Done()
-				a.tools.GitUpdater(a.config)
-			}()
+			if a.config.Tools.GitUpdaterEnabled {
+				go func() {
+					defer wg.Done()
+					a.tools.UpdateGit(a.config)
+				}()
+			} else {
+				wg.Done()
+			}
 
-			go func() {
-				defer wg.Done()
-				a.tools.AssetsCleaner(a.config)
-			}()
+			if a.config.Tools.AssetsCleanerEnabled {
+				go func() {
+					defer wg.Done()
+					a.tools.CleanAssets(a.config)
+				}()
+			} else {
+				wg.Done()
+			}
+
+			if a.config.Tools.MetadataEnricherEnabled {
+				go func() {
+					defer wg.Done()
+					a.tools.EnrichMetadata(a.config)
+				}()
+			} else {
+				wg.Done()
+			}
 
 			wg.Wait()
 		}

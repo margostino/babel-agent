@@ -1,0 +1,36 @@
+prompt: >
+  <objective>
+  You are a smart and expert writing metadata for a given piece of text.
+  </objective>
+ 
+  <input>
+  1. Free Text content about user's memories stored in a file: notes, ideas, plans, projects, knowledge, etc.
+  2. Relative file path of the text file.
+  </input>
+
+  <categories>
+  The categories are:
+  - Inbox: Items that you want to process or organize. This is for raw and unprocessed memories.
+  - Areas: Long-term responsibilities you want to manage over time.
+  - Projects: Short-term efforts (in your work or personal life) that you take on with a certain goal in mind.
+  - Resources: Topics or interests that may be useful in the future.
+  - Archive: Inactive items from the other 4 categories.
+  </categories>
+  
+  <actions>
+  1. Extract the metadata of the input text.
+  </actions>
+  
+  Your output MUST be a JSON object with the following keys.
+  <outputFormat>
+    {
+      "category": "provide the category of the input text", 
+      "path": "provide the relative file path",
+      "tags": "provide a list of the tags of the input text", 
+      "keywords": "provide the keywords of the input text", 
+      "summary": "provide the summary of the input text. Max 150 words", 
+      "notes": "provide the notes of the input text", 
+      "references": "provide the references of the input text", 
+      "related_links": "provide the related links of the input text"
+    }
+  </outputFormat>  

@@ -9,8 +9,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/margostino/babel-agent/internal/common"
 	"github.com/margostino/babel-agent/internal/ssh"
-	"github.com/margostino/babel-agent/pkg/common"
 )
 
 const defaultTick = 10 * time.Second
@@ -32,6 +32,14 @@ type Config struct {
 		FilePath   string `toml:"filePath"`
 		PublicKey  *gitssh.PublicKeys
 	}
+	OpenAi struct {
+		ApiKey string `toml:"apiKey"`
+	}
+	Tools struct {
+		GitUpdaterEnabled       bool `toml:"gitUpdaterEnabled"`
+		AssetsCleanerEnabled    bool `toml:"assetsCleanerEnabled"`
+		MetadataEnricherEnabled bool `toml:"metadataEnricherEnabled"`
+	}
 }
 
 func (c *Config) Init(args []string) error {
@@ -52,13 +60,17 @@ func (c *Config) Init(args []string) error {
 	}
 
 	var (
-		tick          = flags.Duration("tick", defaultTick, "Ticking interval")
-		repo          = flags.String("repo", "", "Path to local repository")
-		githubUser    = flags.String("user", "", "Github username")
-		email         = flags.String("email", "", "Github email")
-		sshPassphrase = flags.String("sshPassphrase", "", "SSH passphrase")
-		sshPath       = flags.String("sshPath", "", "Path to SSH key")
-		message       = flags.String("message", "Babel update", "Commit message")
+		tick                    = flags.Duration("tick", defaultTick, "Ticking interval")
+		repo                    = flags.String("repo", "", "Path to local repository")
+		githubUser              = flags.String("user", "", "Github username")
+		email                   = flags.String("email", "", "Github email")
+		sshPassphrase           = flags.String("sshPassphrase", "", "SSH passphrase")
+		sshPath                 = flags.String("sshPath", "", "Path to SSH key")
+		openAiApiKey            = flags.String("openAiApiKey", "", "OpenAI API key")
+		message                 = flags.String("message", "Babel update", "Commit message")
+		gitUpdaterEnabled       = flags.Bool("gitUpdaterEnabled", false, "Enable GitUpdater tool")
+		assetsCleanerEnabled    = flags.Bool("assetsCleanerEnabled", false, "Enable AssetsCleaner tool")
+		metadataEnricherEnabled = flags.Bool("metadataEnricherEnabled", false, "Enable MetadataEnricher tool")
 	)
 
 	if err := flags.Parse(args[1:]); err != nil {
@@ -79,6 +91,10 @@ func (c *Config) Init(args []string) error {
 		*sshPassphrase = config.Ssh.Passphrase
 		*sshPath = config.Ssh.FilePath
 		*message = config.Repository.Message
+		*openAiApiKey = config.OpenAi.ApiKey
+		*gitUpdaterEnabled = config.Tools.GitUpdaterEnabled
+		*assetsCleanerEnabled = config.Tools.AssetsCleanerEnabled
+		*metadataEnricherEnabled = config.Tools.MetadataEnricherEnabled
 	}
 
 	c.Agent.Tick = *tick
@@ -88,9 +104,15 @@ func (c *Config) Init(args []string) error {
 	c.User.Email = *email
 	c.Ssh.Passphrase = *sshPassphrase
 	c.Ssh.FilePath = *sshPath
+	c.OpenAi.ApiKey = *openAiApiKey
+	c.Tools.GitUpdaterEnabled = *gitUpdaterEnabled
+	c.Tools.AssetsCleanerEnabled = *assetsCleanerEnabled
+	c.Tools.MetadataEnricherEnabled = *metadataEnricherEnabled
 
-	if c.Agent.Tick == 0 || c.Repository.Path == "" || c.User.Username == "" || c.User.Email == "" || c.Repository.Message == "" || c.Ssh.FilePath == "" || c.Ssh.Passphrase == "" {
-		common.Fail("tick, repo, commit message, user, email and SSH Path and Passphrase are required")
+	if c.Agent.Tick == 0 || c.Repository.Path == "" || c.User.Username == "" ||
+		c.User.Email == "" || c.Repository.Message == "" || c.Ssh.FilePath == "" ||
+		c.Ssh.Passphrase == "" || c.OpenAi.ApiKey == "" {
+		common.Fail("tick, repo, commit message, user, email, OpenAI API key and SSH Path and Passphrase are required")
 	}
 
 	sshAuth, keyErr := ssh.NewPublicKey(c.Ssh.FilePath, c.Ssh.Passphrase)
