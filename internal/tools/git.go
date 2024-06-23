@@ -12,7 +12,7 @@ import (
 )
 
 func UpdateGit(config *config.Config) (bool, error) {
-	log.Println("Running GitUpdater tool...")
+	// log.Println("Running GitUpdater tool...")
 	path := config.Repository.Path
 	repo, err := git.PlainOpen(path)
 	common.Check(err, "Failed to open git repo")
@@ -26,16 +26,20 @@ func UpdateGit(config *config.Config) (bool, error) {
 	common.Check(err, "Failed to get status")
 
 	if !status.IsClean() {
-
 		var wg sync.WaitGroup
-		for key := range status {
+		for key, value := range status {
+			var normalizedFileName = key
+			if config.Tools.AssetsCleanerEnabled && value.Worktree != git.Deleted {
+				normalizedFileName = CleanAssets(config, key)
+			}
 			if config.Tools.MetadataEnricherEnabled {
 				wg.Add(1)
-				go EnrichMetadata(config, key, &wg)
-			}
-			if config.Tools.AssetsCleanerEnabled {
-				wg.Add(1)
-				go CleanAssets(config, key, &wg)
+				if value.Worktree == git.Deleted {
+					go DeleteMetadata(config, normalizedFileName, &wg)
+					log.Printf("File %s has been deleted.\n", normalizedFileName)
+				} else {
+					go EnrichMetadata(config, normalizedFileName, &wg)
+				}
 			}
 		}
 		wg.Wait()

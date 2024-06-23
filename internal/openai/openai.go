@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 
 	"gopkg.in/yaml.v2"
 
 	"github.com/margostino/babel-agent/internal/common"
+	"github.com/margostino/babel-agent/prompts"
 )
 
 var BASE_URL = "https://api.openai.com/v1"
 var CHAT_COMPLETION_PATH = "/chat/completions"
 var MODEL = "gpt-4o"
-var PROMPT_FILE_PATH = "../../prompts/metadata_enricher.yml"
+var PROMPT_FILE_PATH = "../../prompt/metadata_enricher.yml"
 
 type Message struct {
 	Role    string `json:"role"`
@@ -51,8 +51,26 @@ type ApiResponse struct {
 }
 
 func getPrompt() (string, error) {
-	content, err := os.ReadFile(PROMPT_FILE_PATH)
-	common.Check(err, "Failed to read metadata file")
+	file, err := prompts.GetEmbeddedPrompt().Open("metadata_enricher.yml")
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	common.Check(err, "Failed to read embedded prompt file")
+
+	// var promptPath string
+	// if config.IsExecutable() {
+	// 	log.Printf("Running in executable mode")
+	// 	filePath, err := filepath.Abs("../../prompts/metadata_enricher.yml")
+	// 	common.Check(err, "Failed to get absolute path")
+	// 	promptPath = filePath
+	// } else {
+	// 	log.Printf("Running in development mode")
+	// 	filePath, err := filepath.Abs("metadata_enricher.yml")
+	// 	common.Check(err, "Failed to get absolute path")
+	// 	promptPath = filePath
+	// }
+	// content, err := os.ReadFile(promptPath)
+	// common.Check(err, "Failed to read prompt file")
 
 	var data map[string]interface{}
 	err = yaml.Unmarshal(content, &data)

@@ -90,35 +90,53 @@ func walkAndEnrichMetadata(root string, skipNamesMap map[string]struct{}, openAi
 	})
 }
 
-func EnrichMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
+func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Println(fmt.Sprintf("Running MetadataEnrichment tool for file: %s", relativeFilePath))
-
-	//skipNames := []string{".git", "metadata", "0-description", "0-babel", "metadata_index"}
-	//skipNamesMap := utils.ListToMap(skipNames)
-	openAiAPIKey := config.OpenAi.ApiKey
+	log.Println(fmt.Sprintf("Running MetadataDeletion tool for file: %s", relativeFilePath))
 
 	root := config.Repository.Path
 	metadataPath := filepath.Join(root, "metadata")
-	absoluteFilePath := filepath.Join(root, relativeFilePath)
-	metadataFilePath := filepath.Join(metadataPath, relativeFilePath)
 
-	content, err := os.ReadFile(absoluteFilePath)
-	common.Check(err, "Failed to read file content")
+	metadataFilePath := fmt.Sprintf("%s.json", filepath.Join(metadataPath, relativeFilePath))
 
-	metadata, err := openai.GetChatCompletionForMetadata(openAiAPIKey, relativeFilePath, string(content))
-	common.Check(err, "Failed to get metadata")
-
-	writePrettyJSONToFile(metadata, metadataFilePath)
+	if _, err := os.Stat(metadataFilePath); !os.IsNotExist(err) {
+		err := os.Remove(metadataFilePath)
+		common.Check(err, "Failed to remove metadata file")
+		log.Printf("Deleted metadata for %s\n", relativeFilePath)
+	}
 }
 
-func EnrichMetadataInBulk(config *config.Config) {
-	log.Println(fmt.Sprintf("Running MetadataEnrichment tool in bulk..."))
+func EnrichMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Println(fmt.Sprintf("Running MetadataEnrichment tool for file: %s", relativeFilePath))
+	openAiAPIKey := config.OpenAi.ApiKey
+	root := config.Repository.Path
+	absoluteFilePath := filepath.Join(root, relativeFilePath)
+
 	skipNames := []string{".git", "metadata", "0-description", "0-babel", "metadata_index"}
 	skipNamesMap := utils.ListToMap(skipNames)
-	openAiAPIKey := config.OpenAi.ApiKey
 
-	if err := walkAndEnrichMetadata(config.Repository.Path, skipNamesMap, openAiAPIKey); err != nil {
-		log.Printf("Error walking through the path: %v\n", err)
+	info, err := os.Stat(absoluteFilePath)
+	if os.IsNotExist(err) {
+		log.Fatalf("path does not exist: %v", err)
+	} else if err != nil {
+		log.Fatalf("failed to get file info: %v", err)
 	}
+	if info.IsDir() {
+		return
+	}
+
+	if _, found := skipNamesMap[info.Name()]; !found {
+		metadataPath := filepath.Join(root, "metadata")
+		metadataFilePath := filepath.Join(metadataPath, relativeFilePath)
+
+		content, err := os.ReadFile(absoluteFilePath)
+		common.Check(err, "Failed to read file content")
+
+		metadata, err := openai.GetChatCompletionForMetadata(openAiAPIKey, relativeFilePath, string(content))
+		common.Check(err, "Failed to get metadata")
+
+		writePrettyJSONToFile(metadata, metadataFilePath)
+	}
+
 }

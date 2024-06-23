@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -10,9 +11,7 @@ import (
 )
 
 type Tools struct {
-	UpdateGit      func(config *config.Config) (bool, error)
-	CleanAssets    func(config *config.Config)
-	EnrichMetadata func(config *config.Config)
+	UpdateGit func(config *config.Config) (bool, error)
 }
 
 type Agent struct {
@@ -24,9 +23,7 @@ func NewAgent(config *config.Config) *Agent {
 	return &Agent{
 		config: config,
 		tools: Tools{
-			UpdateGit:      tools.UpdateGit,
-			CleanAssets:    tools.CleanAssetsInBulk,
-			EnrichMetadata: tools.EnrichMetadataInBulk,
+			UpdateGit: tools.UpdateGit,
 		},
 	}
 }
@@ -38,36 +35,16 @@ func (a *Agent) Run(ctx context.Context) error {
 			return nil
 		case <-time.NewTicker(a.config.Agent.Tick).C:
 			var wg sync.WaitGroup
-			wg.Add(3)
-
 			if a.config.Tools.GitUpdaterEnabled {
+				wg.Add(1)
 				go func() {
 					defer wg.Done()
 					a.tools.UpdateGit(a.config)
 				}()
+				wg.Wait()
 			} else {
-				wg.Done()
+				log.Println("Git updater tool is disabled.")
 			}
-
-			if a.config.Tools.AssetsCleanerEnabled {
-				go func() {
-					defer wg.Done()
-					a.tools.CleanAssets(a.config)
-				}()
-			} else {
-				wg.Done()
-			}
-
-			if a.config.Tools.MetadataEnricherEnabled {
-				go func() {
-					defer wg.Done()
-					a.tools.EnrichMetadata(a.config)
-				}()
-			} else {
-				wg.Done()
-			}
-
-			wg.Wait()
 		}
 	}
 }

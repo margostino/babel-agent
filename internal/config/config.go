@@ -15,6 +15,10 @@ import (
 
 const defaultTick = 10 * time.Second
 
+func IsExecutable() bool {
+	return isExecutable
+}
+
 type Config struct {
 	Repository struct {
 		Path    string `toml:"path"`

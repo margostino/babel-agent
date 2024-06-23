@@ -8,6 +8,7 @@ rm -rf ./bin
 mkdir -p ./bin
 
 # Build the application
-go build -o ./bin/babel-agent ./cmd/babel-agent/
+# go build -o ./bin/babel-agent ./cmd/babel-agent/
+go build -tags prod -o ./bin/babel-agent ./cmd/babel-agent/
 
 echo "Build completed successfully. The binary is located at ./bin/babel-agent"
