@@ -26,13 +26,11 @@ func getRelativePath(absolutePath string) (string, error) {
 	return relativePath, nil
 }
 
-func writePrettyJSONToFile(jsonString, filePath string) {
-	// Unmarshal the JSON string into a map
+func writePrettyJSONToFile(jsonString, filePath string, metadataPath string, relativeFilePath string) {
 	var data map[string]interface{}
 	err := json.Unmarshal([]byte(jsonString), &data)
 	common.Check(err, "Failed to unmarshal JSON")
 
-	// Marshal the map into a pretty-formatted JSON string
 	prettyJSON, err := json.MarshalIndent(data, "", "  ")
 	common.Check(err, "Failed to marshal JSON")
 
@@ -42,6 +40,47 @@ func writePrettyJSONToFile(jsonString, filePath string) {
 
 	err = os.WriteFile(fmt.Sprintf("%s.json", filePath), prettyJSON, 0644)
 	common.Check(err, "Failed to write JSON to file")
+
+	indexFilePath := filepath.Join(metadataPath, "index.json")
+	newIndexEntry := map[string]interface{}{
+		"highlights": data["highlights"],
+		"summary":    data["summary"],
+	}
+	updateIndexFile(indexFilePath, relativeFilePath, newIndexEntry)
+}
+
+func updateIndexFile(indexFilePath, relativeFilePath string, newIndexEntry map[string]interface{}) {
+	indexFileContent, err := os.ReadFile(indexFilePath)
+	if err != nil && !os.IsNotExist(err) {
+		log.Printf("Failed to read index file: %v\n", err)
+		return
+	}
+
+	indexData := make(map[string]map[string]interface{})
+	if len(indexFileContent) > 0 {
+		err = json.Unmarshal(indexFileContent, &indexData)
+		if err != nil {
+			log.Printf("Failed to unmarshal index file: %v\n", err)
+			return
+		}
+	}
+
+	if newIndexEntry != nil {
+		indexData[relativeFilePath] = newIndexEntry
+	} else {
+		delete(indexData, relativeFilePath)
+	}
+
+	indexJSON, err := json.MarshalIndent(indexData, "", "  ")
+	if err != nil {
+		log.Printf("Failed to marshal index data to JSON: %v\n", err)
+		return
+	}
+
+	err = os.WriteFile(indexFilePath, indexJSON, 0644)
+	if err != nil {
+		log.Printf("Failed to write JSON to index file %s: %v\n", indexFilePath, err)
+	}
 }
 
 func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
@@ -50,6 +89,7 @@ func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.Wai
 
 	root := config.Repository.Path
 	metadataPath := filepath.Join(root, "metadata")
+	indexFilePath := filepath.Join(metadataPath, "index.json")
 
 	metadataFilePath := fmt.Sprintf("%s.json", filepath.Join(metadataPath, relativeFilePath))
 
@@ -57,6 +97,7 @@ func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.Wai
 		err := os.Remove(metadataFilePath)
 		common.Check(err, "Failed to remove metadata file")
 		log.Printf("Deleted metadata for %s\n", relativeFilePath)
+		updateIndexFile(indexFilePath, relativeFilePath, nil)
 	}
 }
 
@@ -89,7 +130,7 @@ func EnrichMetadata(config *config.Config, relativeFilePath string, wg *sync.Wai
 		metadata, err := openai.GetChatCompletionForMetadata(openAiAPIKey, relativeFilePath, string(content))
 		common.Check(err, "Failed to get metadata")
 
-		writePrettyJSONToFile(metadata, metadataFilePath)
+		writePrettyJSONToFile(metadata, metadataFilePath, metadataPath, relativeFilePath)
 	}
 
 }

@@ -29,7 +29,7 @@ prompt: >
       "tags": "provide a list of the tags of the input text", 
       "keywords": "provide the keywords of the input text", 
       "summary": "provide the summary of the input text. Max 150 words", 
-      "notes": "provide the notes of the input text", 
+      "highlights": "provide a list of highlights and/or notes of the input text", 
       "references": "provide the references of the input text", 
       "related_links": "provide the related links of the input text"
     }
