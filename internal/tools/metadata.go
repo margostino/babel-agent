@@ -44,52 +44,6 @@ func writePrettyJSONToFile(jsonString, filePath string) {
 	common.Check(err, "Failed to write JSON to file")
 }
 
-func walkAndEnrichMetadata(root string, skipNamesMap map[string]struct{}, openAiAPIKey string) error {
-	metadataPath := filepath.Join(root, "metadata")
-	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			if _, found := skipNamesMap[info.Name()]; found {
-				return filepath.SkipDir
-			}
-		} else {
-			if _, found := skipNamesMap[info.Name()]; !found {
-				relativePath, err := filepath.Rel(root, path)
-				common.Check(err, "Failed to get relative path")
-				metadataFilePath := filepath.Join(metadataPath, relativePath)
-				metadataDir := filepath.Dir(metadataFilePath)
-
-				// Ensure the metadata directory exists
-				if _, err := os.Stat(metadataDir); os.IsNotExist(err) {
-					if err := os.MkdirAll(metadataDir, os.ModePerm); err != nil {
-						return err
-					}
-				}
-
-				content, err := os.ReadFile(path)
-				common.Check(err, "Failed to read file content")
-
-				relativeFilePath, err := getRelativePath(path)
-				common.Check(err, "Failed to get relative path")
-
-				metadata, err := openai.GetChatCompletionForMetadata(openAiAPIKey, relativeFilePath, string(content))
-				common.Check(err, "Failed to get metadata")
-
-				if _, err := os.Stat(metadataFilePath); os.IsNotExist(err) {
-					log.Printf("Created metadata for %s\n", path)
-				} else {
-					log.Printf("Updated Metadata for %s\n", path)
-				}
-
-				writePrettyJSONToFile(metadata, metadataFilePath)
-			}
-		}
-		return nil
-	})
-}
-
 func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	log.Println(fmt.Sprintf("Running MetadataDeletion tool for file: %s", relativeFilePath))
@@ -129,7 +83,6 @@ func EnrichMetadata(config *config.Config, relativeFilePath string, wg *sync.Wai
 	if _, found := skipNamesMap[info.Name()]; !found {
 		metadataPath := filepath.Join(root, "metadata")
 		metadataFilePath := filepath.Join(metadataPath, relativeFilePath)
-
 		content, err := os.ReadFile(absoluteFilePath)
 		common.Check(err, "Failed to read file content")
 
