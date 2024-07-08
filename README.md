@@ -1,6 +1,6 @@
 # 🛰️ Babel Agent
 
-(This project is under Babel Foundation project. You can read the manifest [here](https://github.com/margostino/babel-foundation))
+(This project is under Babel Foundation initiative. You can read the manifest [here](https://github.com/margostino/babel-foundation))
 
 A daemon process that detects changes in local Babel data, pushes changes to the remote repository, and updates metadata and indexing.
 
