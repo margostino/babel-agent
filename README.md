@@ -4,6 +4,10 @@
 
 A daemon process that detects changes in local Babel data, pushes changes to the remote repository, and updates metadata and indexing.
 
+<p align="center">
+  <img src="https://github.com/margostino/babel-foundation/blob/master/assets/babel-architecture.png?raw=true" alt="Babel Foundation Architecture"/>
+</p>
+
 ## Features
 
 - **Change Detection**: Monitors local Babel data for changes and pushes updates to the remote repository.
