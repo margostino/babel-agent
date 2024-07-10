@@ -85,7 +85,7 @@ func updateIndexFile(indexFilePath, relativeFilePath string, newIndexEntry map[s
 
 func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Println(fmt.Sprintf("Running MetadataDeletion tool for file: %s", relativeFilePath))
+	// log.Println(fmt.Sprintf("Running MetadataDeletion tool for file: %s", relativeFilePath))
 
 	root := config.Repository.Path
 	metadataPath := filepath.Join(root, "metadata")
@@ -103,7 +103,7 @@ func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.Wai
 
 func EnrichMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	log.Println(fmt.Sprintf("Running MetadataEnrichment tool for file: %s", relativeFilePath))
+	// log.Println(fmt.Sprintf("Running MetadataEnrichment tool for file: %s", relativeFilePath))
 	openAiAPIKey := config.OpenAi.ApiKey
 	root := config.Repository.Path
 	absoluteFilePath := filepath.Join(root, relativeFilePath)

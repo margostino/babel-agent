@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -52,7 +51,7 @@ func normalizeFileName(name string) string {
 }
 
 func CleanAssets(config *config.Config, relativeFilePath string) string {
-	log.Println(fmt.Sprintf("Running AssetsCleaner tool for file: %s", relativeFilePath))
+	// log.Println(fmt.Sprintf("Running AssetsCleaner tool for file: %s", relativeFilePath))
 
 	skipNames := []string{".git", "0-description", "0-babel", "metadata_index", "metadata"}
 	skipNamesMap := utils.ListToMap(skipNames)
