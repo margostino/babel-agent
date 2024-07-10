@@ -2,9 +2,6 @@ package config
 
 import (
 	"flag"
-	"log"
-	"os"
-	"os/user"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -123,25 +120,25 @@ func (c *Config) Init(args []string) error {
 	common.Check(keyErr, "Failed to get public key")
 	c.Ssh.PublicKey = sshAuth
 
-	u, err := user.Current()
-	common.Check(err, "Failed to get current user")
+	// u, err := user.Current()
+	// common.Check(err, "Failed to get current user")
 
-	username := u.Username
+	// username := u.Username
 
-	log.Printf(`Babel agent started (by %s) with configuration: 
-	Repo [%s] 
-	Tick [%s] 
-	User [%s] 
-	Email [%s] 
-	Message [%s]`,
-		username, c.Repository.Path, c.Agent.Tick, c.User.Username, c.User.Email, c.Repository.Message)
+	// log.Printf(`Babel agent started (by %s) with configuration:
+	// Repo [%s]
+	// Tick [%s]
+	// User [%s]
+	// Email [%s]
+	// Message [%s]`,
+	// 	username, c.Repository.Path, c.Agent.Tick, c.User.Username, c.User.Email, c.Repository.Message)
 
-	sshAuthSock := os.Getenv("SSH_AUTH_SOCK")
-	if sshAuthSock != "" {
-		log.Printf("SSH_AUTH_SOCK is set: %s", sshAuthSock)
-	} else {
-		log.Printf("SSH_AUTH_SOCK not set")
-	}
+	// sshAuthSock := os.Getenv("SSH_AUTH_SOCK")
+	// if sshAuthSock != "" {
+	// 	log.Printf("SSH_AUTH_SOCK is set: %s", sshAuthSock)
+	// } else {
+	// 	log.Printf("SSH_AUTH_SOCK not set")
+	// }
 
 	return nil
 }
