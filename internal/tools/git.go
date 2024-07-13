@@ -11,8 +11,7 @@ import (
 	"github.com/margostino/babel-agent/internal/config"
 )
 
-func UpdateGit(config *config.Config) (bool, error) {
-	// log.Println("Running GitUpdater tool...")
+func pull(config *config.Config) (git.Status, *git.Worktree, *git.Repository) {
 	path := config.Repository.Path
 	repo, err := git.PlainOpen(path)
 	common.Check(err, "Failed to open git repo")
@@ -24,11 +23,21 @@ func UpdateGit(config *config.Config) (bool, error) {
 	}
 	status, err := workTree.Status()
 	common.Check(err, "Failed to get status")
+	return status, workTree, repo
+}
+
+func UpdateGit(config *config.Config) (bool, error) {
+	status, workTree, repo := pull(config)
 
 	if !status.IsClean() {
 		var wg sync.WaitGroup
 		for key, value := range status {
 			var normalizedFileName = key
+
+			if common.NewString(normalizedFileName).Split("/").Values()[0] == "metadata" {
+				continue
+			}
+
 			if config.Tools.AssetsCleanerEnabled && value.Worktree != git.Deleted {
 				normalizedFileName = CleanAssets(config, key)
 			}
@@ -44,7 +53,7 @@ func UpdateGit(config *config.Config) (bool, error) {
 		}
 		wg.Wait()
 
-		_, err = workTree.Add(".")
+		_, err := workTree.Add(".")
 		common.Check(err, "Failed to add file to git")
 
 		trackedFilesCount := len(status)
