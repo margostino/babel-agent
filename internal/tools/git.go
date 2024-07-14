@@ -9,6 +9,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/margostino/babel-agent/internal/common"
 	"github.com/margostino/babel-agent/internal/config"
+	"github.com/margostino/babel-agent/internal/utils"
 )
 
 func pull(config *config.Config) (git.Status, *git.Worktree, *git.Repository) {
@@ -26,6 +27,15 @@ func pull(config *config.Config) (git.Status, *git.Worktree, *git.Repository) {
 	return status, workTree, repo
 }
 
+func isValidForMetadata(filePath string) bool {
+	validFolderNames := []string{"0-INBOX", "AREAS", "PROJECTS", "RESOURCES", "A-ARCHIVES"}
+	validFolderNamesMap := utils.ListToMap(validFolderNames)
+	prefix := common.NewString(filePath).GetPrefixBy("/")
+
+	_, found := validFolderNamesMap[*prefix]
+	return found
+}
+
 func UpdateGit(config *config.Config) (bool, error) {
 	status, workTree, repo := pull(config)
 
@@ -34,7 +44,7 @@ func UpdateGit(config *config.Config) (bool, error) {
 		for key, value := range status {
 			var normalizedFileName = key
 
-			if common.NewString(normalizedFileName).Split("/").Values()[0] == "metadata" {
+			if !isValidForMetadata(normalizedFileName) {
 				continue
 			}
 

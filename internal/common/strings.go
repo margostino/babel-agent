@@ -39,6 +39,17 @@ func (s *String) TrimSpace() *String {
 	return s
 }
 
+func (s *String) GetPrefixBy(separator string) *string {
+
+	values := s.Split(separator).Values()
+
+	if len(values) > 0 {
+		return &values[0]
+	}
+
+	return nil
+}
+
 func (s *String) TrimIndex(index int) *String {
 	var prefix string
 
