@@ -6,25 +6,59 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/margostino/babel-agent/internal/common"
 	"github.com/margostino/babel-agent/internal/config"
 	"github.com/margostino/babel-agent/internal/utils"
 )
 
-func pull(config *config.Config) (git.Status, *git.Worktree, *git.Repository) {
+func getPulledFiles(repo *git.Repository, oldHash, newHash plumbing.Hash) ([]string, error) {
+	commitBefore, err := repo.CommitObject(oldHash)
+	if err != nil {
+		return nil, err
+	}
+
+	commitAfter, err := repo.CommitObject(newHash)
+	if err != nil {
+		return nil, err
+	}
+
+	patch, err := commitBefore.Patch(commitAfter)
+	if err != nil {
+		return nil, err
+	}
+
+	var pulledFiles []string
+	for _, fileStat := range patch.Stats() {
+		pulledFiles = append(pulledFiles, fileStat.Name)
+	}
+
+	return pulledFiles, nil
+}
+
+func pull(config *config.Config) (git.Status, *git.Worktree, *git.Repository, []string) {
 	path := config.Repository.Path
 	repo, err := git.PlainOpen(path)
 	common.Check(err, "Failed to open git repo")
 	workTree, err := repo.Worktree()
 	common.Check(err, "Failed to get work tree from repo")
+	headBefore, err := repo.Head()
+	common.Check(err, "Failed to get current HEAD")
 	err = workTree.Pull(&git.PullOptions{RemoteName: "origin", Auth: config.Ssh.PublicKey})
 	if err != nil && err.Error() != "already up-to-date" {
 		common.Check(err, "Failed to pull")
 	}
 	status, err := workTree.Status()
 	common.Check(err, "Failed to get status")
-	return status, workTree, repo
+
+	headAfter, err := repo.Head()
+	common.Check(err, "Failed to get new HEAD")
+
+	pulledFiles, err := getPulledFiles(repo, headBefore.Hash(), headAfter.Hash())
+	common.Check(err, "Failed to get pulled files")
+
+	return status, workTree, repo, pulledFiles
 }
 
 func isValidForMetadata(filePath string) bool {
@@ -37,7 +71,19 @@ func isValidForMetadata(filePath string) bool {
 }
 
 func UpdateGit(config *config.Config) (bool, error) {
-	status, workTree, repo := pull(config)
+	status, workTree, repo, pulledFiles := pull(config)
+
+	for _, file := range pulledFiles {
+		if !isValidForMetadata(file) {
+			continue
+		}
+		pulledStatus := &git.FileStatus{
+			Staging:  git.Unmodified,
+			Worktree: git.Modified,
+			Extra:    "",
+		}
+		status[file] = pulledStatus
+	}
 
 	if !status.IsClean() {
 		var wg sync.WaitGroup
