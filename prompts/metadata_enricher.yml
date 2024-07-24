@@ -18,7 +18,7 @@ prompt: >
   </categories>
   
   <actions>
-  1. Extract the metadata of the input text.
+  Extract the metadata of the input text.
   </actions>
   
   Your output MUST be a JSON object with the following keys.
@@ -26,11 +26,11 @@ prompt: >
     {
       "category": "provide the category of the input text", 
       "path": "provide the relative file path",
-      "tags": "provide a list of the tags of the input text", 
-      "keywords": "provide the keywords of the input text", 
+      "tags": ["here provide a LIST of the tags of the input text"], 
+      "keywords": ["here provide a LIST of keywords of the input text"], 
       "summary": "provide the summary of the input text. Max 150 words", 
-      "highlights": "provide a list of highlights and/or notes of the input text", 
-      "references": "provide the references of the input text", 
-      "related_links": "provide the related links of the input text"
+      "highlights": ["here provide a LIST of highlights and/or notes of the input text"], 
+      "references": ["here provide a LIST of the references of the input text"], 
+      "related_links": ["here provide a LIST of the related links of the input text"]
     }
   </outputFormat>  
