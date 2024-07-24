@@ -13,6 +13,7 @@ import (
 	"github.com/margostino/babel-agent/internal/config"
 	"github.com/margostino/babel-agent/internal/openai"
 	"github.com/margostino/babel-agent/internal/utils"
+	"github.com/weaviate/weaviate-go-client/v4/weaviate"
 )
 
 func getRelativePath(absolutePath string) (string, error) {
@@ -26,9 +27,9 @@ func getRelativePath(absolutePath string) (string, error) {
 	return relativePath, nil
 }
 
-func writePrettyJSONToFile(jsonString, filePath string, metadataPath string, relativeFilePath string) {
+func writePrettyJSONToFile(metadataContent string, filePath string, metadataPath string, relativeFilePath string) map[string]interface{} {
 	var data map[string]interface{}
-	err := json.Unmarshal([]byte(jsonString), &data)
+	err := json.Unmarshal([]byte(metadataContent), &data)
 	common.Check(err, "Failed to unmarshal JSON")
 
 	prettyJSON, err := json.MarshalIndent(data, "", "  ")
@@ -47,6 +48,7 @@ func writePrettyJSONToFile(jsonString, filePath string, metadataPath string, rel
 		"summary":    data["summary"],
 	}
 	updateIndexFile(indexFilePath, relativeFilePath, newIndexEntry)
+	return data
 }
 
 func updateIndexFile(indexFilePath, relativeFilePath string, newIndexEntry map[string]interface{}) {
@@ -83,7 +85,7 @@ func updateIndexFile(indexFilePath, relativeFilePath string, newIndexEntry map[s
 	}
 }
 
-func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
+func DeleteMetadata(dbClient *weaviate.Client, id string, config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	// log.Println(fmt.Sprintf("Running MetadataDeletion tool for file: %s", relativeFilePath))
 
@@ -98,10 +100,12 @@ func DeleteMetadata(config *config.Config, relativeFilePath string, wg *sync.Wai
 		common.Check(err, "Failed to remove metadata file")
 		log.Printf("Deleted metadata for %s\n", relativeFilePath)
 		updateIndexFile(indexFilePath, relativeFilePath, nil)
+
+		DeleteObject(dbClient, id)
 	}
 }
 
-func EnrichMetadata(config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
+func EnrichMetadata(dbClient *weaviate.Client, id *string, config *config.Config, relativeFilePath string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	// log.Println(fmt.Sprintf("Running MetadataEnrichment tool for file: %s", relativeFilePath))
 	openAiAPIKey := config.OpenAi.ApiKey
@@ -118,6 +122,7 @@ func EnrichMetadata(config *config.Config, relativeFilePath string, wg *sync.Wai
 		log.Fatalf("failed to get file info: %v", err)
 	}
 	if info.IsDir() {
+		log.Printf("skipping directory: %s\n", absoluteFilePath)
 		return
 	}
 
@@ -127,10 +132,16 @@ func EnrichMetadata(config *config.Config, relativeFilePath string, wg *sync.Wai
 		content, err := os.ReadFile(absoluteFilePath)
 		common.Check(err, "Failed to read file content")
 
-		metadata, err := openai.GetChatCompletionForMetadata(openAiAPIKey, relativeFilePath, string(content))
+		metadataContent, err := openai.GetChatCompletionForMetadata(openAiAPIKey, relativeFilePath, string(content))
 		common.Check(err, "Failed to get metadata")
 
-		writePrettyJSONToFile(metadata, metadataFilePath, metadataPath, relativeFilePath)
+		fileContent, err := writePrettyJSONToFile(metadataContent, metadataFilePath, metadataPath, relativeFilePath), nil
+
+		if id == nil {
+			CreateObject(dbClient, fileContent)
+		} else {
+			UpdateObject(dbClient, *id, fileContent)
+		}
 	}
 
 }

@@ -7,21 +7,25 @@ import (
 	"time"
 
 	"github.com/margostino/babel-agent/internal/config"
+	"github.com/margostino/babel-agent/internal/db"
 	"github.com/margostino/babel-agent/internal/tools"
+	"github.com/weaviate/weaviate-go-client/v4/weaviate"
 )
 
 type Tools struct {
-	UpdateGit func(config *config.Config) (bool, error)
+	UpdateGit func(dbClient *weaviate.Client, config *config.Config) (bool, error)
 }
 
 type Agent struct {
-	config *config.Config
-	tools  Tools
+	config   *config.Config
+	tools    Tools
+	dbClient *weaviate.Client
 }
 
 func NewAgent(config *config.Config) *Agent {
 	return &Agent{
-		config: config,
+		config:   config,
+		dbClient: db.NewDBClient(config.OpenAi.ApiKey),
 		tools: Tools{
 			UpdateGit: tools.UpdateGit,
 		},
@@ -39,7 +43,7 @@ func (a *Agent) Run(ctx context.Context) error {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
-					a.tools.UpdateGit(a.config)
+					a.tools.UpdateGit(a.dbClient, a.config)
 				}()
 				wg.Wait()
 			} else {

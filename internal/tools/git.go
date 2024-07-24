@@ -11,6 +11,7 @@ import (
 	"github.com/margostino/babel-agent/internal/common"
 	"github.com/margostino/babel-agent/internal/config"
 	"github.com/margostino/babel-agent/internal/utils"
+	"github.com/weaviate/weaviate-go-client/v4/weaviate"
 )
 
 func getPulledFiles(repo *git.Repository, oldHash, newHash plumbing.Hash) ([]string, error) {
@@ -70,7 +71,7 @@ func isValidForMetadata(filePath string) bool {
 	return found
 }
 
-func UpdateGit(config *config.Config) (bool, error) {
+func UpdateGit(dbClient *weaviate.Client, config *config.Config) (bool, error) {
 	status, workTree, repo, pulledFiles := pull(config)
 
 	for _, file := range pulledFiles {
@@ -98,12 +99,21 @@ func UpdateGit(config *config.Config) (bool, error) {
 				normalizedFileName = CleanAssets(config, key)
 			}
 			if config.Tools.MetadataEnricherEnabled {
+				var id *string
+				var err error
+				if value.Worktree != git.Untracked {
+					id, err = GetObject(dbClient, config, normalizedFileName)
+					if err != nil {
+						log.Printf("Failed to get object for file %s: %v\n", normalizedFileName, err)
+						continue
+					}
+				}
 				wg.Add(1)
 				if value.Worktree == git.Deleted {
-					go DeleteMetadata(config, normalizedFileName, &wg)
+					go DeleteMetadata(dbClient, *id, config, normalizedFileName, &wg)
 					log.Printf("File %s has been deleted.\n", normalizedFileName)
 				} else {
-					go EnrichMetadata(config, normalizedFileName, &wg)
+					go EnrichMetadata(dbClient, id, config, normalizedFileName, &wg)
 				}
 			}
 		}
