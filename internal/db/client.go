@@ -19,11 +19,11 @@ func NewDBClient(openAiApiKey string) *weaviate.Client {
 	if err != nil {
 		panic(err)
 	}
-	ready, err := client.Misc().ReadyChecker().Do(context.Background())
+	_, err = client.Misc().ReadyChecker().Do(context.Background())
 	if err != nil {
 		log.Println("Weaviate is NOT ready yet")
 	} else {
-		log.Printf("Weaviate is ready: %t\n", ready)
+		// log.Printf("Weaviate is ready: %t\n", ready)
 	}
 	return client
 }
