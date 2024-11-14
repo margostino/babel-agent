@@ -2,14 +2,15 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/weaviate/weaviate-go-client/v4/weaviate"
 )
 
-func NewDBClient(openAiApiKey string) *weaviate.Client {
+func NewDBClient(openAiApiKey string, port int) *weaviate.Client {
 	cfg := weaviate.Config{
-		Host:   "localhost:8080",
+		Host:   fmt.Sprintf("%s:%d", "localhost", port),
 		Scheme: "http",
 		Headers: map[string]string{
 			"X-OpenAI-Api-Key": openAiApiKey,

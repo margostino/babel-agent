@@ -41,6 +41,9 @@ type Config struct {
 		AssetsCleanerEnabled    bool `toml:"assetsCleanerEnabled"`
 		MetadataEnricherEnabled bool `toml:"metadataEnricherEnabled"`
 	}
+	Db struct {
+		Port int `toml:"port"`
+	}
 }
 
 func (c *Config) Init(args []string) error {
@@ -72,6 +75,7 @@ func (c *Config) Init(args []string) error {
 		gitUpdaterEnabled       = flags.Bool("gitUpdaterEnabled", false, "Enable GitUpdater tool")
 		assetsCleanerEnabled    = flags.Bool("assetsCleanerEnabled", false, "Enable AssetsCleaner tool")
 		metadataEnricherEnabled = flags.Bool("metadataEnricherEnabled", false, "Enable MetadataEnricher tool")
+		dbPort                  = flags.Int("dbPort", 8585, "Port for the database")
 	)
 
 	if err := flags.Parse(args[1:]); err != nil {
@@ -109,6 +113,7 @@ func (c *Config) Init(args []string) error {
 	c.Tools.GitUpdaterEnabled = *gitUpdaterEnabled
 	c.Tools.AssetsCleanerEnabled = *assetsCleanerEnabled
 	c.Tools.MetadataEnricherEnabled = *metadataEnricherEnabled
+	c.Db.Port = *dbPort
 
 	if c.Agent.Tick == 0 || c.Repository.Path == "" || c.User.Username == "" ||
 		c.User.Email == "" || c.Repository.Message == "" || c.Ssh.FilePath == "" ||

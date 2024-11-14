@@ -20,3 +20,6 @@ tick = "$TICK (e.g. 10s)"
 gitUpdaterEnabled = false
 assetsCleanerEnabled = false
 metadataEnricherEnabled = true
+
+[db]
+port = 8585

@@ -25,7 +25,7 @@ type Agent struct {
 func NewAgent(config *config.Config) *Agent {
 	return &Agent{
 		config:   config,
-		dbClient: db.NewDBClient(config.OpenAi.ApiKey),
+		dbClient: db.NewDBClient(config.OpenAi.ApiKey, config.Db.Port),
 		tools: Tools{
 			UpdateGit: tools.UpdateGit,
 		},
