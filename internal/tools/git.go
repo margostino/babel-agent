@@ -74,6 +74,11 @@ func isValidForMetadata(filePath string) bool {
 func UpdateGit(dbClient *weaviate.Client, config *config.Config) (bool, error) {
 	status, workTree, repo, pulledFiles := pull(config)
 
+	if len(pulledFiles) > 0 && status.IsClean() {
+		log.Printf("Pulled changes %d files from remote", len(pulledFiles))
+		return true, nil
+	}
+
 	for _, file := range pulledFiles {
 		if !isValidForMetadata(file) {
 			continue
