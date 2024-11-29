@@ -53,7 +53,7 @@ func normalizeFileName(name string) string {
 func CleanAssets(config *config.Config, relativeFilePath string) string {
 	// log.Println(fmt.Sprintf("Running AssetsCleaner tool for file: %s", relativeFilePath))
 
-	skipNames := []string{".git", "0-description", "0-babel", "metadata_index", "metadata"}
+	skipNames := []string{".git", "0-description", "0-babel", "metadata_index", "z-metadata"}
 	skipNamesMap := utils.ListToMap(skipNames)
 
 	root := config.Repository.Path

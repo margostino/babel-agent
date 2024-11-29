@@ -90,7 +90,7 @@ func DeleteMetadata(dbClient *weaviate.Client, id string, config *config.Config,
 	// log.Println(fmt.Sprintf("Running MetadataDeletion tool for file: %s", relativeFilePath))
 
 	root := config.Repository.Path
-	metadataPath := filepath.Join(root, "metadata")
+	metadataPath := filepath.Join(root, "z-metadata")
 	indexFilePath := filepath.Join(metadataPath, "index.json")
 
 	metadataFilePath := fmt.Sprintf("%s.json", filepath.Join(metadataPath, relativeFilePath))
@@ -112,7 +112,7 @@ func EnrichMetadata(dbClient *weaviate.Client, id *string, config *config.Config
 	root := config.Repository.Path
 	absoluteFilePath := filepath.Join(root, relativeFilePath)
 
-	skipNames := []string{".git", "metadata", "0-description", "0-babel", "metadata_index"}
+	skipNames := []string{".git", "z-metadata", "0-description", "0-babel", "metadata_index"}
 	skipNamesMap := utils.ListToMap(skipNames)
 
 	info, err := os.Stat(absoluteFilePath)
@@ -127,7 +127,7 @@ func EnrichMetadata(dbClient *weaviate.Client, id *string, config *config.Config
 	}
 
 	if _, found := skipNamesMap[info.Name()]; !found {
-		metadataPath := filepath.Join(root, "metadata")
+		metadataPath := filepath.Join(root, "z-metadata")
 		metadataFilePath := filepath.Join(metadataPath, relativeFilePath)
 		content, err := os.ReadFile(absoluteFilePath)
 		common.Check(err, "Failed to read file content")
